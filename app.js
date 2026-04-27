@@ -1,141 +1,126 @@
-/* ============================================================
-   Nihongo Cards — Daily Japanese Greeting Flashcards
-   New batch of 5 cards unlocked every day at 5:45 AM Nepal Time
-   ============================================================ */
+const START_DATE = new Date('2026-04-22T05:45:00+05:45'); // 5:45 AM Nepal Time
 
-// ===== NEPAL TIMEZONE OFFSET =====
-const NEPAL_OFFSET_MIN = 5 * 60 + 45; // UTC+5:45
+// ===== INFOGRAPHIC CARD LIBRARY (60 cards = 12 days) =====
+// Each card has an 'icon' (Infographic watermark) and a 'colorHint' for the dynamic gradient.
+const MASTER_LIBRARY = [
+  // ---- DAY 1: Greetings ----
+  { id:'d1c1', theme:'Greeting', japanese:'こんにちは', nepali:'नमस्ते', romaji:'Konnichiwa', english:'Hello', habit:'Say hello to someone new.', icon:'👋', colorHint:'#d35400' },
+  { id:'d1c2', theme:'Greeting', japanese:'ありがとう', nepali:'धन्यवाद', romaji:'Arigatou', english:'Thank you', habit:'Express gratitude today.', icon:'🙏', colorHint:'#f39c12' },
+  { id:'d1c3', theme:'Basic', japanese:'はい', nepali:'हो / हजुर', romaji:'Hai', english:'Yes', habit:'Nod and say yes.', icon:'✅', colorHint:'#27ae60' },
+  { id:'d1c4', theme:'Basic', japanese:'いいえ', nepali:'होइन', romaji:'Iie', english:'No', habit:'Practice polite refusal.', icon:'❌', colorHint:'#c0392b' },
+  { id:'d1c5', theme:'Greeting', japanese:'さようなら', nepali:'बिदा', romaji:'Sayounara', english:'Goodbye', habit:'Wave goodbye politely.', icon:'🚶', colorHint:'#8e44ad' },
 
-function getNepalDate() {
-  const now = new Date();
-  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
-  const nepalMs = utcMs + NEPAL_OFFSET_MIN * 60000;
-  const nepal = new Date(nepalMs);
-  // Before 5:45 AM Nepal time counts as "previous day's session"
-  if (nepal.getHours() < 5 || (nepal.getHours() === 5 && nepal.getMinutes() < 45)) {
-    nepal.setDate(nepal.getDate() - 1);
-  }
-  return nepal.toISOString().slice(0, 10); // YYYY-MM-DD
+  // ---- DAY 2: Numbers 1-5 ----
+  { id:'d2c1', theme:'Number', japanese:'一', nepali:'एक', romaji:'Ichi', english:'One', habit:'Count one item.', icon:'1️⃣', colorHint:'#2980b9' },
+  { id:'d2c2', theme:'Number', japanese:'二', nepali:'दुई', romaji:'Ni', english:'Two', habit:'Count two items.', icon:'2️⃣', colorHint:'#2980b9' },
+  { id:'d2c3', theme:'Number', japanese:'三', nepali:'तीन', romaji:'San', english:'Three', habit:'Count three items.', icon:'3️⃣', colorHint:'#2980b9' },
+  { id:'d2c4', theme:'Number', japanese:'四', nepali:'चार', romaji:'Yon / Shi', english:'Four', habit:'Count four items.', icon:'4️⃣', colorHint:'#2980b9' },
+  { id:'d2c5', theme:'Number', japanese:'五', nepali:'पाँच', romaji:'Go', english:'Five', habit:'Count five items.', icon:'5️⃣', colorHint:'#2980b9' },
+
+  // ---- DAY 3: Numbers 6-10 ----
+  { id:'d3c1', theme:'Number', japanese:'六', nepali:'छ', romaji:'Roku', english:'Six', habit:'Find six similar objects.', icon:'6️⃣', colorHint:'#34495e' },
+  { id:'d3c2', theme:'Number', japanese:'七', nepali:'सात', romaji:'Nana / Shichi', english:'Seven', habit:'Count to seven.', icon:'7️⃣', colorHint:'#34495e' },
+  { id:'d3c3', theme:'Number', japanese:'八', nepali:'आठ', romaji:'Hachi', english:'Eight', habit:'Practice counting to eight.', icon:'8️⃣', colorHint:'#34495e' },
+  { id:'d3c4', theme:'Number', japanese:'九', nepali:'नौ', romaji:'Kyuu', english:'Nine', habit:'Count nine steps.', icon:'9️⃣', colorHint:'#34495e' },
+  { id:'d3c5', theme:'Number', japanese:'十', nepali:'दस', romaji:'Juu', english:'Ten', habit:'Count to ten in Japanese.', icon:'🔟', colorHint:'#34495e' },
+
+  // ---- DAY 4: Colors ----
+  { id:'d4c1', theme:'Color', japanese:'赤', nepali:'रातो', romaji:'Aka', english:'Red', habit:'Spot something red.', icon:'🔴', colorHint:'#e74c3c' },
+  { id:'d4c2', theme:'Color', japanese:'青', nepali:'निलो', romaji:'Ao', english:'Blue', habit:'Look at the blue sky.', icon:'🔵', colorHint:'#3498db' },
+  { id:'d4c3', theme:'Color', japanese:'緑', nepali:'हरियो', romaji:'Midori', english:'Green', habit:'Find a green leaf.', icon:'🟢', colorHint:'#2ecc71' },
+  { id:'d4c4', theme:'Color', japanese:'黄色', nepali:'पहेँलो', romaji:'Kiiro', english:'Yellow', habit:'Notice something yellow.', icon:'🟡', colorHint:'#f1c40f' },
+  { id:'d4c5', theme:'Color', japanese:'白', nepali:'सेतो', romaji:'Shiro', english:'White', habit:'Point out a white cloud.', icon:'⚪', colorHint:'#bdc3c7' },
+
+  // ---- DAY 5: Animals ----
+  { id:'d5c1', theme:'Animal', japanese:'犬', nepali:'कुकुर', romaji:'Inu', english:'Dog', habit:'Pet a dog if you can.', icon:'🐕', colorHint:'#d35400' },
+  { id:'d5c2', theme:'Animal', japanese:'猫', nepali:'बिरालो', romaji:'Neko', english:'Cat', habit:'Listen for a meow.', icon:'🐈', colorHint:'#f39c12' },
+  { id:'d5c3', theme:'Animal', japanese:'鳥', nepali:'चरा', romaji:'Tori', english:'Bird', habit:'Look for flying birds.', icon:'🕊️', colorHint:'#3498db' },
+  { id:'d5c4', theme:'Animal', japanese:'魚', nepali:'माछा', romaji:'Sakana', english:'Fish', habit:'Imagine a fish swimming.', icon:'🐟', colorHint:'#1abc9c' },
+  { id:'d5c5', theme:'Animal', japanese:'熊', nepali:'भालु', romaji:'Kuma', english:'Bear', habit:'Think of a strong bear.', icon:'🐻', colorHint:'#8e44ad' },
+
+  // ---- DAY 6: Actions ----
+  { id:'d6c1', theme:'Action', japanese:'食べる', nepali:'खानु', romaji:'Taberu', english:'To eat', habit:'Say this when you eat.', icon:'🍱', colorHint:'#e67e22' },
+  { id:'d6c2', theme:'Action', japanese:'飲む', nepali:'पिउनु', romaji:'Nomu', english:'To drink', habit:'Say this drinking water.', icon:'🍵', colorHint:'#27ae60' },
+  { id:'d6c3', theme:'Action', japanese:'寝る', nepali:'सुत्नु', romaji:'Neru', english:'To sleep', habit:'Say this before bed.', icon:'😴', colorHint:'#2c3e50' },
+  { id:'d6c4', theme:'Action', japanese:'見る', nepali:'हेर्नु', romaji:'Miru', english:'To see/watch', habit:'Use when watching TV.', icon:'👀', colorHint:'#8e44ad' },
+  { id:'d6c5', theme:'Action', japanese:'行く', nepali:'जानु', romaji:'Iku', english:'To go', habit:'Say this when leaving.', icon:'🚶‍♂️', colorHint:'#2980b9' },
+
+  // ---- DAY 7: Nature ----
+  { id:'d7c1', theme:'Nature', japanese:'太陽', nepali:'घाम', romaji:'Taiyou', english:'Sun', habit:'Feel the morning sun.', icon:'☀️', colorHint:'#f39c12' },
+  { id:'d7c2', theme:'Nature', japanese:'雨', nepali:'पानी (वर्षा)', romaji:'Ame', english:'Rain', habit:'Listen to the rain.', icon:'🌧️', colorHint:'#34495e' },
+  { id:'d7c3', theme:'Nature', japanese:'山', nepali:'पहाड', romaji:'Yama', english:'Mountain', habit:'Look at a mountain.', icon:'🗻', colorHint:'#2c3e50' },
+  { id:'d7c4', theme:'Nature', japanese:'川', nepali:'नदी', romaji:'Kawa', english:'River', habit:'Imagine a flowing river.', icon:'🏞️', colorHint:'#2980b9' },
+  { id:'d7c5', theme:'Nature', japanese:'花', nepali:'फूल', romaji:'Hana', english:'Flower', habit:'Smell a flower today.', icon:'🌸', colorHint:'#e84393' },
+
+  // ---- DAY 8: Food & Drink ----
+  { id:'d8c1', theme:'Food', japanese:'水', nepali:'पानी', romaji:'Mizu', english:'Water', habit:'Drink a glass of water.', icon:'💧', colorHint:'#3498db' },
+  { id:'d8c2', theme:'Food', japanese:'お茶', nepali:'चिया', romaji:'Ocha', english:'Tea', habit:'Enjoy a cup of tea.', icon:'🍵', colorHint:'#27ae60' },
+  { id:'d8c3', theme:'Food', japanese:'ご飯', nepali:'भात', romaji:'Gohan', english:'Rice / Meal', habit:'Appreciate your daily rice.', icon:'🍚', colorHint:'#f39c12' },
+  { id:'d8c4', theme:'Food', japanese:'肉', nepali:'मासु', romaji:'Niku', english:'Meat', habit:'Recognize meat in a dish.', icon:'🥩', colorHint:'#c0392b' },
+  { id:'d8c5', theme:'Food', japanese:'パン', nepali:'रोटी / पाउरोटी', romaji:'Pan', english:'Bread', habit:'Eat bread for breakfast.', icon:'🥐', colorHint:'#d35400' },
+
+  // ---- DAY 9: Family ----
+  { id:'d9c1', theme:'Family', japanese:'母', nepali:'आमा', romaji:'Haha', english:'Mother', habit:'Call or talk to your mother.', icon:'👩‍👦', colorHint:'#e84393' },
+  { id:'d9c2', theme:'Family', japanese:'父', nepali:'बुबा', romaji:'Chichi', english:'Father', habit:'Talk to your father.', icon:'👨‍👧', colorHint:'#2980b9' },
+  { id:'d9c3', theme:'Family', japanese:'兄', nepali:'दाइ', romaji:'Ani', english:'Older Brother', habit:'Remember your older brother.', icon:'👦', colorHint:'#8e44ad' },
+  { id:'d9c4', theme:'Family', japanese:'姉', nepali:'दिदी', romaji:'Ane', english:'Older Sister', habit:'Remember your older sister.', icon:'👧', colorHint:'#c0392b' },
+  { id:'d9c5', theme:'Family', japanese:'私', nepali:'म', romaji:'Watashi', english:'I / Me', habit:'Say "I am learning".', icon:'👤', colorHint:'#16a085' },
+
+  // ---- DAY 10: Body Parts ----
+  { id:'d10c1', theme:'Body', japanese:'頭', nepali:'टाउको', romaji:'Atama', english:'Head', habit:'Touch your head.', icon:'🗣️', colorHint:'#34495e' },
+  { id:'d10c2', theme:'Body', japanese:'目', nepali:'आँखा', romaji:'Me', english:'Eye', habit:'Blink your eyes.', icon:'👁️', colorHint:'#2980b9' },
+  { id:'d10c3', theme:'Body', japanese:'手', nepali:'हात', romaji:'Te', english:'Hand', habit:'Clap your hands.', icon:'✋', colorHint:'#e67e22' },
+  { id:'d10c4', theme:'Body', japanese:'足', nepali:'खुट्टा', romaji:'Ashi', english:'Foot / Leg', habit:'Tap your foot.', icon:'🦶', colorHint:'#d35400' },
+  { id:'d10c5', theme:'Body', japanese:'口', nepali:'मुख', romaji:'Kuchi', english:'Mouth', habit:'Smile widely.', icon:'👄', colorHint:'#c0392b' },
+
+  // ---- DAY 11: Objects ----
+  { id:'d11c1', theme:'Object', japanese:'本', nepali:'किताब', romaji:'Hon', english:'Book', habit:'Read a page of a book.', icon:'📖', colorHint:'#8e44ad' },
+  { id:'d11c2', theme:'Object', japanese:'ペン', nepali:'कलम', romaji:'Pen', english:'Pen', habit:'Write down a Japanese word.', icon:'🖊️', colorHint:'#2980b9' },
+  { id:'d11c3', theme:'Object', japanese:'車', nepali:'गाडी', romaji:'Kuruma', english:'Car', habit:'Spot a car outside.', icon:'🚗', colorHint:'#c0392b' },
+  { id:'d11c4', theme:'Object', japanese:'家', nepali:'घर', romaji:'Ie', english:'House', habit:'Appreciate your home.', icon:'🏠', colorHint:'#27ae60' },
+  { id:'d11c5', theme:'Object', japanese:'お金', nepali:'पैसा', romaji:'Okane', english:'Money', habit:'Look at a coin.', icon:'💴', colorHint:'#f39c12' },
+
+  // ---- DAY 12: Time ----
+  { id:'d12c1', theme:'Time', japanese:'今日', nepali:'आज', romaji:'Kyou', english:'Today', habit:'Make the most of today.', icon:'📅', colorHint:'#3498db' },
+  { id:'d12c2', theme:'Time', japanese:'明日', nepali:'भोलि', romaji:'Ashita', english:'Tomorrow', habit:'Plan for tomorrow.', icon:'🌅', colorHint:'#e67e22' },
+  { id:'d12c3', theme:'Time', japanese:'今', nepali:'अहिले', romaji:'Ima', english:'Now', habit:'Focus on the present moment.', icon:'⏳', colorHint:'#9b59b6' },
+  { id:'d12c4', theme:'Time', japanese:'朝', nepali:'बिहान', romaji:'Asa', english:'Morning', habit:'Wake up early tomorrow.', icon:'🌄', colorHint:'#f39c12' },
+  { id:'d12c5', theme:'Time', japanese:'夜', nepali:'रात', romaji:'Yoru', english:'Night', habit:'Look at the stars tonight.', icon:'🌃', colorHint:'#2c3e50' }
+];
+
+let currentDayCards = [];
+let activeCardIndex = 0;
+let activeDayIndex = 0;
+let schedulerTimer = null;
+let isAudioPrimed = false;
+
+// ===== TIME CALCULATION =====
+function getNepalTime() {
+  const d = new Date();
+  const utc = d.getTime() + (d.getTimezoneOffset() * 60000);
+  return new Date(utc + (3600000 * 5.75));
+}
+
+function getTotalUnlockedDays() {
+  const now = getNepalTime();
+  const start = new Date(START_DATE);
+  if (now < start) return 1;
+  const diffMs = now - start;
+  const daysDiff = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const unlocked = daysDiff + 1;
+  const maxDays = Math.ceil(MASTER_LIBRARY.length / 5);
+  return Math.min(unlocked, maxDays);
 }
 
 function msUntilNextUnlock() {
-  const now = new Date();
-  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
-  const nepalMs = utcMs + NEPAL_OFFSET_MIN * 60000;
-  const nepal = new Date(nepalMs);
-
-  // Next unlock: tomorrow at 5:45 AM Nepal
-  const next = new Date(nepalMs);
+  const nepal = getNepalTime();
+  const next = new Date(nepal);
   next.setHours(5, 45, 0, 0);
   if (nepal.getHours() > 5 || (nepal.getHours() === 5 && nepal.getMinutes() >= 45)) {
     next.setDate(next.getDate() + 1);
   }
-  const diffNepalMs = next - nepal;
-  return diffNepalMs; // ms until next unlock
+  return next - nepal;
 }
-
-// ===== MASTER CARD LIBRARY (60 cards = 12 days worth) =====
-// Each card: { id, theme, japanese, nepali, romaji, english, habit, themeKey }
-// themeKey cycles through: morning | mealtime | leaving | returning | bedtime
-const MASTER_LIBRARY = [
-  // ---- DAY 1 (original set) ----
-  { id:'d1c1', theme:'Morning Start',      japanese:'おはようございます',   nepali:'शुभ बिहानी',              romaji:'Ohayou gozaimasu',    english:'Good Morning',          habit:'Say this when you wake up.',      themeKey:'morning'   },
-  { id:'d1c2', theme:'Mealtime Gratitude', japanese:'いただきます',          nepali:'म खान सुरु गर्दैछु',     romaji:'Itadakimasu',         english:'I humbly receive',      habit:'Say before eating.',              themeKey:'mealtime'  },
-  { id:'d1c3', theme:'Leaving House',      japanese:'行ってきます',           nepali:'म गएर आउँछु',            romaji:'Ittekimasu',          english:"I'll go and come back", habit:'Say when leaving home.',          themeKey:'leaving'   },
-  { id:'d1c4', theme:'Returning Home',     japanese:'ただいま',              nepali:'म आएँ',                  romaji:'Tadaima',             english:"I'm back",              habit:'Say when you return home.',       themeKey:'returning' },
-  { id:'d1c5', theme:'Bedtime Routine',    japanese:'おやすみなさい',        nepali:'शुभ रात्री',              romaji:'Oyasuminasai',        english:'Good Night',            habit:'Say before sleeping.',            themeKey:'bedtime'   },
-
-  // ---- DAY 2 ----
-  { id:'d2c1', theme:'Thank You',          japanese:'ありがとうございます',   nepali:'धेरै धन्यवाद',            romaji:'Arigatou gozaimasu',  english:'Thank you very much',   habit:'Thank someone today.',            themeKey:'morning'   },
-  { id:'d2c2', theme:'You\'re Welcome',    japanese:'どういたしまして',       nepali:'कुनै कुरा छैन',           romaji:'Dou itashimashite',   english:"You're welcome",        habit:'Respond graciously today.',       themeKey:'mealtime'  },
-  { id:'d2c3', theme:'Please',             japanese:'お願いします',           nepali:'कृपया',                  romaji:'Onegaishimasu',       english:'Please / I ask of you', habit:'Use when requesting help.',       themeKey:'leaving'   },
-  { id:'d2c4', theme:'I\'m Sorry',         japanese:'すみません',             nepali:'माफ गर्नुस्',             romaji:'Sumimasen',           english:'Excuse me / Sorry',     habit:'Apologise if needed today.',      themeKey:'returning' },
-  { id:'d2c5', theme:'I Understand',       japanese:'わかりました',           nepali:'मैले बुझें',             romaji:'Wakarimashita',       english:'I understand',          habit:'Say when you understand.',        themeKey:'bedtime'   },
-
-  // ---- DAY 3 ----
-  { id:'d3c1', theme:'Nice to Meet You',   japanese:'はじめまして',           nepali:'भेट भएकोमा खुशी छु',     romaji:'Hajimemashite',       english:'Nice to meet you',      habit:'Introduce yourself today.',       themeKey:'morning'   },
-  { id:'d3c2', theme:'How Are You?',       japanese:'お元気ですか',           nepali:'तपाईं कस्तो हुनुहुन्छ?', romaji:'Ogenki desu ka',      english:'How are you?',          habit:'Ask someone how they are.',       themeKey:'mealtime'  },
-  { id:'d3c3', theme:'I\'m Fine',          japanese:'元気です',              nepali:'म ठीक छु',               romaji:'Genki desu',          english:'I am fine/well',        habit:'Respond positively today.',       themeKey:'leaving'   },
-  { id:'d3c4', theme:'See You Later',      japanese:'またね',                nepali:'फेरि भेटौँला',           romaji:'Mata ne',             english:'See you later',         habit:'Say goodbye to a friend.',        themeKey:'returning' },
-  { id:'d3c5', theme:'Take Care',          japanese:'お大事に',              nepali:'ख्याल राख्नुस्',         romaji:'Odaiji ni',           english:'Take care',             habit:'Tell someone to take care.',      themeKey:'bedtime'   },
-
-  // ---- DAY 4 ----
-  { id:'d4c1', theme:'Let\'s Eat',         japanese:'いただきましょう',       nepali:'खाउँ न',                 romaji:'Itadakimashou',       english:"Let's eat",             habit:'Invite family to eat together.',  themeKey:'morning'   },
-  { id:'d4c2', theme:'It was Delicious',   japanese:'ごちそうさまでした',     nepali:'खाना मिठो थियो',         romaji:'Gochisousama deshita',english:'Thank you for the meal',habit:'Say after every meal.',           themeKey:'mealtime'  },
-  { id:'d4c3', theme:'I\'m Going Out',     japanese:'出かけます',             nepali:'म बाहिर जाँदैछु',        romaji:'Dekakemasu',          english:"I'm going out",         habit:'Announce before leaving.',        themeKey:'leaving'   },
-  { id:'d4c4', theme:'Welcome Back',       japanese:'お帰り',                nepali:'स्वागत छ',               romaji:'Okaeri',              english:'Welcome back',          habit:'Greet returning family members.', themeKey:'returning' },
-  { id:'d4c5', theme:'Sweet Dreams',       japanese:'いい夢を',              nepali:'राम्रो सपना देख्नुस्',   romaji:'Ii yume wo',          english:'Sweet dreams',          habit:'Wish someone good dreams.',       themeKey:'bedtime'   },
-
-  // ---- DAY 5 ----
-  { id:'d5c1', theme:'Good Afternoon',     japanese:'こんにちは',             nepali:'नमस्कार',                romaji:'Konnichiwa',          english:'Hello / Good Afternoon', habit:'Greet people during the day.',   themeKey:'morning'   },
-  { id:'d5c2', theme:'Good Evening',       japanese:'こんばんは',             nepali:'शुभ सन्ध्या',            romaji:'Konbanwa',            english:'Good evening',          habit:'Greet people in the evening.',    themeKey:'mealtime'  },
-  { id:'d5c3', theme:'Be Careful',         japanese:'気をつけて',             nepali:'सावधान रहनुस्',          romaji:'Ki wo tsukete',       english:'Be careful / Take care',habit:'Say before someone travels.',     themeKey:'leaving'   },
-  { id:'d5c4', theme:'I\'m Home',          japanese:'ただいま帰りました',     nepali:'म घर आएँ',              romaji:'Tadaima kaerimashita',english:'I have returned home',  habit:'Say the full phrase today.',      themeKey:'returning' },
-  { id:'d5c5', theme:'Rest Well',          japanese:'ゆっくり休んでね',       nepali:'राम्ररी आराम गर्नुस्',  romaji:'Yukkuri yasunde ne',  english:'Rest well',             habit:'Tell a tired person to rest.',    themeKey:'bedtime'   },
-
-  // ---- DAY 6 ----
-  { id:'d6c1', theme:'Good Luck',          japanese:'頑張って',              nepali:'शुभकामना',               romaji:'Ganbatte',            english:'Do your best / Good luck', habit:'Encourage someone today.',     themeKey:'morning'   },
-  { id:'d6c2', theme:'No Problem',         japanese:'大丈夫です',             nepali:'ठीक छ',                  romaji:'Daijoubu desu',       english:"It's alright / No problem",habit:'Use when reassuring others.',  themeKey:'mealtime'  },
-  { id:'d6c3', theme:'Just a Moment',      japanese:'少し待ってください',     nepali:'एक क्षण पर्खनुस्',      romaji:'Sukoshi matte kudasai',english:'Please wait a moment',  habit:'Say politely when busy.',         themeKey:'leaving'   },
-  { id:'d6c4', theme:'I\'m Tired',         japanese:'疲れました',             nepali:'म थाकें',               romaji:'Tsukaremashita',      english:'I am tired',            habit:'Express how you feel honestly.',  themeKey:'returning' },
-  { id:'d6c5', theme:'Sleep Well',         japanese:'ゆっくり寝てね',         nepali:'राम्ररी सुत्नुस्',      romaji:'Yukkuri nete ne',     english:'Sleep well',            habit:'Wish family a good night.',       themeKey:'bedtime'   },
-
-  // ---- DAY 7 ----
-  { id:'d7c1', theme:'Congratulations',    japanese:'おめでとうございます',   nepali:'बधाई छ',                 romaji:'Omedetou gozaimasu',  english:'Congratulations',       habit:'Congratulate someone today.',     themeKey:'morning'   },
-  { id:'d7c2', theme:'Enjoy Your Meal',    japanese:'召し上がれ',             nepali:'खाना मज्जाले खानुस्',   romaji:'Meshiagare',          english:'Please enjoy your meal',habit:'Say when serving food.',          themeKey:'mealtime'  },
-  { id:'d7c3', theme:'Have a Safe Trip',   japanese:'気をつけて行ってらっしゃい', nepali:'सुरक्षित जानुस्',    romaji:'Ki wo tsukete itterasshai', english:'Have a safe trip',  habit:'Say to departing loved ones.',    themeKey:'leaving'   },
-  { id:'d7c4', theme:'You\'re Back!',      japanese:'おかえりなさい',         nepali:'स्वागत छ तपाईंलाई',     romaji:'Okaerinasai',         english:'Welcome home (formal)',  habit:'Welcome someone home warmly.',  themeKey:'returning' },
-  { id:'d7c5', theme:'Don\'t Stay Up Late',japanese:'夜更かしはだめよ',       nepali:'ढिलो नसुत्नुस्',        romaji:'Yofukashi wa dame yo', english:'Don\'t stay up too late', habit:'Remind yourself to sleep early.', themeKey:'bedtime'  },
-
-  // ---- DAY 8 ----
-  { id:'d8c1', theme:'Let\'s Do Our Best', japanese:'一緒に頑張りましょう',   nepali:'सँगै मिहिनेत गरौँ',     romaji:'Issho ni ganbarimassho', english:"Let's try our best together", habit:'Encourage a teammate.',     themeKey:'morning'   },
-  { id:'d8c2', theme:'I\'m Hungry',        japanese:'お腹が空きました',       nepali:'म भोकाएँ',              romaji:'Onaka ga sukimashita',english:'I am hungry',           habit:'Express hunger politely.',        themeKey:'mealtime'  },
-  { id:'d8c3', theme:'On My Way',          japanese:'もう出発します',         nepali:'म अहिले हिँड्छु',       romaji:'Mou shuppatsu shimasu',english:'I\'m departing now',    habit:'Send a message before leaving.',  themeKey:'leaving'   },
-  { id:'d8c4', theme:'Glad to Be Home',    japanese:'やっと帰れた',          nepali:'आखिर घर आएँ',           romaji:'Yatto kaereta',       english:'Finally made it home',  habit:'Appreciate coming home.',         themeKey:'returning' },
-  { id:'d8c5', theme:'Time to Sleep',      japanese:'もう寝る時間です',       nepali:'अब सुत्ने समय भयो',     romaji:'Mou neru jikan desu',  english:'It\'s time to sleep',   habit:'Set a regular sleep schedule.',   themeKey:'bedtime'   },
-
-  // ---- DAY 9 ----
-  { id:'d9c1', theme:'Good Morning Sun',   japanese:'朝日がきれいですね',     nepali:'बिहानको घाम सुन्दर छ',  romaji:'Asahi ga kirei desu ne',english:'The morning sun is beautiful', habit:'Admire nature today.',      themeKey:'morning'   },
-  { id:'d9c2', theme:'Shall We Eat?',      japanese:'食べませんか',           nepali:'खाने हो?',               romaji:'Tabemasen ka',        english:'Shall we eat?',         habit:'Invite a friend for lunch.',      themeKey:'mealtime'  },
-  { id:'d9c3', theme:'I\'ll Be Back Soon', japanese:'すぐ戻ります',          nepali:'म छिट्टै फर्किन्छु',    romaji:'Sugu modorimasu',     english:'I\'ll be back soon',    habit:'Say before a short trip.',        themeKey:'leaving'   },
-  { id:'d9c4', theme:'I Missed Home',      japanese:'家が恋しかった',         nepali:'घर मिस्स भयो',          romaji:'Ie ga koishikatta',   english:'I missed home',         habit:'Tell family you missed them.',    themeKey:'returning' },
-  { id:'d9c5', theme:'Peaceful Night',     japanese:'静かな夜ですね',         nepali:'शान्त रात छ',            romaji:'Shizuka na yoru desu ne', english:'What a peaceful night', habit:'Enjoy the quiet evening.',     themeKey:'bedtime'   },
-
-  // ---- DAY 10 ----
-  { id:'d10c1', theme:'Wake Up!',           japanese:'起きなさい',            nepali:'उठ्नुस्!',              romaji:'Okinasai',            english:'Wake up!',              habit:'Wake up on time tomorrow.',       themeKey:'morning'   },
-  { id:'d10c2', theme:'Let\'s Cook',        japanese:'料理しましょう',        nepali:'खाना पकाउँ',             romaji:'Ryouri shimashou',    english:"Let's cook",            habit:'Cook a meal at home today.',      themeKey:'mealtime'  },
-  { id:'d10c3', theme:'Don\'t Forget',      japanese:'忘れないでね',          nepali:'नबिर्सनुस् है',          romaji:'Wasurenaide ne',      english:'Don\'t forget',         habit:'Set a reminder for yourself.',    themeKey:'leaving'   },
-  { id:'d10c4', theme:'Home Sweet Home',    japanese:'やっぱり家が一番',      nepali:'घर नै सबभन्दा राम्रो',  romaji:'Yappari ie ga ichiban', english:'Home is the best',     habit:'Appreciate your home today.',     themeKey:'returning' },
-  { id:'d10c5', theme:'Tomorrow is New',    japanese:'明日も頑張ろう',        nepali:'भोलि पनि मिहिनेत गरौँ', romaji:'Ashita mo ganbarou',  english:'Let\'s do our best tomorrow', habit:'Plan something good for tomorrow.', themeKey:'bedtime' },
-
-  // ---- DAY 11 ----
-  { id:'d11c1', theme:'Morning Exercise',   japanese:'朝の運動をしましょう',  nepali:'बिहान व्यायाम गरौँ',   romaji:'Asa no undou wo shimashou', english:'Let\'s exercise in the morning', habit:'Do 10 min of exercise.', themeKey:'morning'   },
-  { id:'d11c2', theme:'Enjoy the Food',     japanese:'おいしそうですね',      nepali:'मिठो देखिन्छ',          romaji:'Oishisou desu ne',    english:'That looks delicious',  habit:'Compliment food today.',          themeKey:'mealtime'  },
-  { id:'d11c3', theme:'Safe Travels',       japanese:'どうぞお気をつけて',    nepali:'राम्ररी जानुस्',        romaji:'Douzo oki wo tsukete', english:'Please travel safely',  habit:'Wish family safe travels.',       themeKey:'leaving'   },
-  { id:'d11c4', theme:'I\'m Exhausted',     japanese:'くたくたです',          nepali:'म एकदम थाकें',          romaji:'Kutakuta desu',       english:'I\'m completely tired', habit:'Rest without guilt today.',       themeKey:'returning' },
-  { id:'d11c5', theme:'Lights Out',         japanese:'電気を消してください',  nepali:'बत्ती निभाउनुस्',       romaji:'Denki wo keshite kudasai', english:'Please turn off the lights', habit:'Save energy at night.',     themeKey:'bedtime'   },
-
-  // ---- DAY 12 ----
-  { id:'d12c1', theme:'Fresh Start',        japanese:'今日も素晴らしい一日を', nepali:'आज पनि राम्रो दिन होस्', romaji:'Kyou mo subarashii ichinichi wo', english:'Have a wonderful day today', habit:'Set a positive intention.', themeKey:'morning'  },
-  { id:'d12c2', theme:'Eat Together',       japanese:'一緒に食べましょう',    nepali:'सँगै खाउँ',             romaji:'Issho ni tabemashou',  english:"Let's eat together",    habit:'Share a meal with family.',       themeKey:'mealtime'  },
-  { id:'d12c3', theme:'I\'m Off Now',       japanese:'行ってまいります',      nepali:'म जाँदैछु',             romaji:'Itte mairimasu',       english:'I am off now (formal)', habit:'Use the respectful form today.',  themeKey:'leaving'   },
-  { id:'d12c4', theme:'Back at Last',       japanese:'ようやく帰ってきた',    nepali:'अन्तमा आएँ',            romaji:'Youyaku kaette kita',  english:'Finally back',          habit:'Notice the joy of returning.',    themeKey:'returning' },
-  { id:'d12c5', theme:'Dream of Japan',     japanese:'日本の夢を見てね',      nepali:'जापानको सपना देख्नुस्', romaji:'Nihon no yume wo mite ne', english:'Dream of Japan',       habit:'Imagine visiting Japan.',         themeKey:'bedtime'   },
-];
-
-const CARDS_PER_DAY = 5;
-
-// ===== STORAGE KEYS =====
-const STORAGE_KEY_UNLOCKED = 'nihongo_unlocked_days';
-const STORAGE_KEY_VIEWED   = 'nihongo_viewed_day';
-
-// ===== STATE =====
-let allUnlockedCards = []; // All cards visible so far
-let currentDayCards  = []; // Cards for the selected day
-let currentIndex     = 0;
-let isAnimating      = false;
-let activeDayIndex   = 0;  // Which day is user viewing
-let schedulerTimer   = null;
 
 // ===== INIT =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -145,84 +130,53 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDayCards(activeDayIndex);
   scheduleNextUnlock();
   bindEvents();
+  
+  // Prime audio instantly on first interaction
+  const primeHandler = () => {
+    if (!isAudioPrimed && window.speechSynthesis) {
+      const u = new SpeechSynthesisUtterance('');
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
+      isAudioPrimed = true;
+      document.removeEventListener('click', primeHandler);
+      document.removeEventListener('touchstart', primeHandler);
+    }
+  };
+  document.addEventListener('click', primeHandler);
+  document.addEventListener('touchstart', primeHandler);
 });
 
-// ===== UNLOCK LOGIC =====
-// Returns how many day-batches should be unlocked so far,
-// counting from the app's epoch (Day 1 = 2026-04-22)
-const EPOCH_DATE = '2026-04-22'; // Day 1
-
-function daysBetween(isoA, isoB) {
-  const a = new Date(isoA + 'T00:00:00Z');
-  const b = new Date(isoB + 'T00:00:00Z');
-  return Math.round((b - a) / 86400000);
-}
-
+// ===== CORE LOGIC =====
 function unlockDueCards() {
-  const today = getNepalDate();
-  const daysElapsed = Math.max(0, daysBetween(EPOCH_DATE, today));
-  // Day 1 is index 0, meaning batches 0..daysElapsed are unlocked
-  const batchesToUnlock = Math.min(daysElapsed + 1, Math.floor(MASTER_LIBRARY.length / CARDS_PER_DAY));
-
-  // Save to storage
-  localStorage.setItem(STORAGE_KEY_UNLOCKED, String(batchesToUnlock));
-
-  // Flatten unlocked cards
-  allUnlockedCards = MASTER_LIBRARY.slice(0, batchesToUnlock * CARDS_PER_DAY);
-
-  // Default: view the latest day
-  activeDayIndex = batchesToUnlock - 1;
+  const total = getTotalUnlockedDays();
+  activeDayIndex = total - 1; 
 }
 
-function getDayCards(dayIndex) {
-  const start = dayIndex * CARDS_PER_DAY;
-  return allUnlockedCards.slice(start, start + CARDS_PER_DAY);
-}
-
-function getTotalUnlockedDays() {
-  return Math.ceil(allUnlockedCards.length / CARDS_PER_DAY);
-}
-
-// ===== DAY PANEL =====
 function buildDayPanel() {
   const panel = document.getElementById('dayPanel');
+  panel.innerHTML = '';
   const total = getTotalUnlockedDays();
-
-  const items = Array.from({ length: total }, (_, i) => {
-    const label = i === total - 1 ? '⭐ Today' : `Day ${i + 1}`;
-    const dateLabel = getDayDateLabel(i);
-    return `<button class="day-btn ${i === activeDayIndex ? 'active' : ''}" 
-              data-day="${i}" onclick="switchDay(${i})" title="${dateLabel}">
-              ${label}
-            </button>`;
-  }).join('');
-
-  panel.innerHTML = `<div class="day-panel-inner">${items}</div>`;
-
-  // Show countdown to next unlock
-  updateCountdown();
+  
+  for (let i = 0; i < total; i++) {
+    const btn = document.createElement('button');
+    btn.className = `day-btn ${i === activeDayIndex ? 'active' : ''}`;
+    btn.textContent = `Day ${i + 1}`;
+    btn.onclick = () => {
+      document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      loadDayCards(i);
+    };
+    panel.appendChild(btn);
+  }
 }
 
-function getDayDateLabel(dayIndex) {
-  const d = new Date(EPOCH_DATE + 'T00:00:00Z');
-  d.setUTCDate(d.getUTCDate() + dayIndex);
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-function switchDay(dayIndex) {
-  activeDayIndex = dayIndex;
-  document.querySelectorAll('.day-btn').forEach((b, i) =>
-    b.classList.toggle('active', i === dayIndex)
-  );
-  loadDayCards(dayIndex);
-}
-
-// ===== LOAD CARDS FOR A DAY =====
 function loadDayCards(dayIndex) {
-  currentDayCards = getDayCards(dayIndex);
-  currentIndex = 0;
+  activeDayIndex = dayIndex;
+  const startIndex = dayIndex * 5;
+  currentDayCards = MASTER_LIBRARY.slice(startIndex, startIndex + 5);
+  activeCardIndex = 0;
+  
   renderCards();
-  renderDots();
   updateView();
   updateDayHeading(dayIndex);
 }
@@ -230,315 +184,257 @@ function loadDayCards(dayIndex) {
 function updateDayHeading(dayIndex) {
   const total = getTotalUnlockedDays();
   const isToday = dayIndex === total - 1;
-  const label = isToday ? `Today's Cards` : `Day ${dayIndex + 1} Cards`;
-  document.getElementById('dayHeading').textContent = label;
-  document.getElementById('dayDateLabel').textContent = getDayDateLabel(dayIndex);
+  document.getElementById('dayHeading').textContent = isToday ? "Today's Cards" : `Day ${dayIndex + 1} Cards`;
+  
+  const d = new Date(START_DATE);
+  d.setDate(d.getDate() + dayIndex);
+  document.getElementById('dayDateLabel').textContent = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-// ===== PARTICLE BACKGROUND =====
 function createParticles() {
   const container = document.getElementById('particles');
-  for (let i = 0; i < 25; i++) {
+  for (let i = 0; i < 20; i++) {
     const p = document.createElement('div');
     p.className = 'particle';
     const size = Math.random() * 6 + 2;
-    p.style.width = `${size}px`;
-    p.style.height = `${size}px`;
+    p.style.width = `${size}px`; p.style.height = `${size}px`;
     p.style.left = `${Math.random() * 100}%`;
-    p.style.animationDuration = `${Math.random() * 15 + 10}s`;
-    p.style.animationDelay = `${Math.random() * 10}s`;
+    p.style.animationDuration = `${Math.random() * 10 + 10}s`;
+    p.style.animationDelay = `${Math.random() * 5}s`;
     container.appendChild(p);
   }
 }
 
-// ===== RENDER CARDS =====
-const THEME_IMAGES = {
-  morning:   'images/morning.png',
-  mealtime:  'images/mealtime.png',
-  leaving:   'images/leaving.png',
-  returning: 'images/returning.png',
-  bedtime:   'images/bedtime.png',
-};
-
+// ===== DYNAMIC INFOGRAPHIC RENDERING =====
 function renderCards() {
   const container = document.getElementById('cardContainer');
-  container.innerHTML = currentDayCards.map((card, i) => `
-    <div class="nihongo-card hidden" data-theme="${card.themeKey}" data-index="${i}" id="card-${card.id}">
-      <div class="card-accent-bar"></div>
-      <div class="card-bg">
-        <img src="${THEME_IMAGES[card.themeKey]}" alt="${card.theme} background" loading="eager" />
+  container.innerHTML = currentDayCards.map((card, i) => {
+    // Generate dynamic dark gradient based on colorHint
+    const bgGradient = `linear-gradient(135deg, ${card.colorHint}33 0%, #05050f 80%)`;
+    
+    return `
+    <div class="nihongo-card hidden" data-index="${i}" id="card-${card.id}">
+      <div class="card-bg" style="background: ${bgGradient};">
+        <div class="card-watermark">${card.icon}</div>
       </div>
       <div class="card-overlay"></div>
       <div class="card-content">
-        <!-- Top -->
         <div class="card-top">
-          <div class="card-badge">
-            <span class="badge-dot"></span>
-            CARD ${i + 1}
-          </div>
+          <div class="card-badge"><span class="badge-dot"></span> CARD ${i + 1}</div>
           <button class="btn-audio" onclick="playAudio(${i})" title="Listen to pronunciation" id="btnAudio-${i}">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-            </svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M8 5v14l11-7z"/></svg>
           </button>
         </div>
-
-        <!-- Middle -->
         <div class="card-middle">
-          <div class="card-japanese">${card.japanese}</div>
           <div class="card-theme">${card.theme}</div>
+          <div class="card-japanese">${card.japanese}</div>
           <div class="card-nepali">${card.nepali}</div>
           <div class="card-romaji">(${card.romaji})</div>
         </div>
-
-        <!-- Bottom -->
         <div class="card-bottom">
           <div class="detail-row">
-            <span class="detail-icon">🇬🇧</span>
-            <span class="detail-text"><span class="detail-label">Meaning:</span> "${card.english}"</span>
+            <div class="detail-icon">🇬🇧</div>
+            <div class="detail-text"><span class="detail-label">Meaning:</span> "${card.english}"</div>
           </div>
           <div class="detail-row">
-            <span class="detail-icon">🌸</span>
-            <span class="detail-text"><span class="detail-label">Habit:</span> ${card.habit}</span>
+            <div class="detail-icon">🌸</div>
+            <div class="detail-text"><span class="detail-label">Habit:</span> ${card.habit}</div>
           </div>
         </div>
       </div>
     </div>
-  `).join('');
+  `}).join('');
+  
+  const dots = document.getElementById('dotIndicators');
+  dots.innerHTML = currentDayCards.map((_, i) => `<div class="dot" onclick="goToCard(${i})"></div>`).join('');
 }
 
-// ===== RENDER DOTS =====
-function renderDots() {
-  const container = document.getElementById('dotIndicators');
-  container.innerHTML = currentDayCards.map((_, i) =>
-    `<div class="dot" data-index="${i}" onclick="goToCard(${i})"></div>`
-  ).join('');
-}
-
-// ===== UPDATE VIEW =====
 function updateView() {
   const cards = document.querySelectorAll('.nihongo-card');
-  const dots  = document.querySelectorAll('.dot');
-
+  const dots = document.querySelectorAll('.dot');
+  
   cards.forEach((card, i) => {
-    card.classList.remove('active', 'exit-left', 'exit-right', 'hidden');
-    card.classList.add(i === currentIndex ? 'active' : 'hidden');
+    card.className = 'nihongo-card';
+    if (i === activeCardIndex) {
+      card.classList.add('active');
+    } else if (i < activeCardIndex) {
+      card.classList.add('exit-left');
+    } else {
+      card.classList.add('exit-right');
+    }
   });
-  dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
-}
-
-// ===== NAVIGATION =====
-function navigate(direction) {
-  if (isAnimating || currentDayCards.length === 0) return;
-  isAnimating = true;
-
-  const cards = document.querySelectorAll('.nihongo-card');
-  const dots  = document.querySelectorAll('.dot');
-  const oldIndex = currentIndex;
-
-  currentIndex = direction === 'next'
-    ? (currentIndex + 1) % currentDayCards.length
-    : (currentIndex - 1 + currentDayCards.length) % currentDayCards.length;
-
-  cards[oldIndex].classList.remove('active', 'hidden');
-  cards[oldIndex].classList.add(direction === 'next' ? 'exit-left' : 'exit-right');
-  cards[currentIndex].classList.remove('hidden', 'exit-left', 'exit-right');
-  cards[currentIndex].classList.add('active');
-  dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
-
-  setTimeout(() => {
-    cards[oldIndex].classList.remove('exit-left', 'exit-right');
-    cards[oldIndex].classList.add('hidden');
-    isAnimating = false;
-  }, 600);
+  
+  dots.forEach((dot, i) => {
+    dot.className = i === activeCardIndex ? 'dot active' : 'dot';
+  });
 }
 
 function goToCard(index) {
-  if (index === currentIndex || isAnimating) return;
-  const direction = index > currentIndex ? 'next' : 'prev';
-  const cards = document.querySelectorAll('.nihongo-card');
-  const dots  = document.querySelectorAll('.dot');
-  const oldIndex = currentIndex;
-  currentIndex = index;
-  isAnimating = true;
-
-  cards[oldIndex].classList.remove('active', 'hidden');
-  cards[oldIndex].classList.add(direction === 'next' ? 'exit-left' : 'exit-right');
-  cards[currentIndex].classList.remove('hidden', 'exit-left', 'exit-right');
-  cards[currentIndex].classList.add('active');
-  dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
-
-  setTimeout(() => {
-    cards[oldIndex].classList.remove('exit-left', 'exit-right');
-    cards[oldIndex].classList.add('hidden');
-    isAnimating = false;
-  }, 600);
+  if (index === activeCardIndex) return;
+  activeCardIndex = index;
+  updateView();
 }
 
-// ===== SCHEDULER =====
-function scheduleNextUnlock() {
-  const ms = msUntilNextUnlock();
-  console.log(`Next card unlock in ${Math.round(ms / 60000)} minutes (Nepal 5:45 AM)`);
-  if (schedulerTimer) clearTimeout(schedulerTimer);
-  schedulerTimer = setTimeout(() => {
-    unlockDueCards();
-    buildDayPanel();
-    loadDayCards(activeDayIndex);
-    showToastMessage('🎉 5 new cards unlocked!', 3500);
-    scheduleNextUnlock(); // reschedule for the day after
-  }, ms);
-}
-
-// ===== COUNTDOWN DISPLAY =====
-function updateCountdown() {
-  const el = document.getElementById('countdownTimer');
-  if (!el) return;
-
-  function tick() {
-    const ms = msUntilNextUnlock();
-    const totalSec = Math.floor(ms / 1000);
-    const h = Math.floor(totalSec / 3600);
-    const m = Math.floor((totalSec % 3600) / 60);
-    const s = totalSec % 60;
-    el.textContent = `Next unlock: ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+function nextCard() {
+  if (activeCardIndex < currentDayCards.length - 1) {
+    activeCardIndex++;
+    updateView();
   }
-  tick();
-  setInterval(tick, 1000);
+}
+
+function prevCard() {
+  if (activeCardIndex > 0) {
+    activeCardIndex--;
+    updateView();
+  }
+}
+
+function bindEvents() {
+  document.getElementById('navNext').addEventListener('click', nextCard);
+  document.getElementById('navPrev').addEventListener('click', prevCard);
+  
+  // Swipe support
+  let touchStartX = 0;
+  let touchEndX = 0;
+  const stage = document.getElementById('cardStage');
+  
+  stage.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
+  stage.addEventListener('touchend', e => {
+    touchEndX = e.changedTouches[0].screenX;
+    if (touchEndX < touchStartX - 40) nextCard();
+    if (touchEndX > touchStartX + 40) prevCard();
+  }, {passive: true});
+  
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') nextCard();
+    if (e.key === 'ArrowLeft') prevCard();
+  });
+  
+  // PDF
+  document.getElementById('btnDownloadPdf').addEventListener('click', generateMultiPagePDF);
 }
 
 // ===== AUDIO =====
 function playAudio(index) {
   const card = currentDayCards[index];
-  if (!card) return;
+  if (!card || !window.speechSynthesis) return;
+  
+  window.speechSynthesis.cancel();
+  
   const btn = document.getElementById(`btnAudio-${index}`);
-
-  if (window.speechSynthesis.speaking) {
-    window.speechSynthesis.cancel();
-    document.querySelectorAll('.btn-audio').forEach(b => b.classList.remove('playing'));
-  }
-
+  document.querySelectorAll('.btn-audio').forEach(b => b.classList.remove('playing'));
+  if (btn) btn.classList.add('playing');
+  
   const utterance = new SpeechSynthesisUtterance(card.japanese);
-  utterance.lang  = 'ja-JP';
-  utterance.rate  = 0.85;
-  utterance.pitch = 1.0;
-
   const voices = window.speechSynthesis.getVoices();
-  const jaVoice = voices.find(v => v.lang.startsWith('ja'));
+  const jaVoice = voices.find(v => v.lang.startsWith('ja')) || voices.find(v => v.lang.includes('JP'));
   if (jaVoice) utterance.voice = jaVoice;
-
-  utterance.onstart = () => { btn && btn.classList.add('playing'); showToast('Playing audio…'); };
-  utterance.onend   = () => { btn && btn.classList.remove('playing'); hideToast(); };
-  utterance.onerror = () => { btn && btn.classList.remove('playing'); hideToast(); showToastMessage('Audio unavailable', 2000); };
-
+  utterance.rate = 0.85;
+  
+  utterance.onend = () => { if (btn) btn.classList.remove('playing'); };
+  utterance.onerror = () => { if (btn) btn.classList.remove('playing'); };
+  
   window.speechSynthesis.speak(utterance);
 }
 
-if (window.speechSynthesis) {
-  window.speechSynthesis.getVoices();
-  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+// ===== SCHEDULER =====
+function scheduleNextUnlock() {
+  if (schedulerTimer) clearTimeout(schedulerTimer);
+  schedulerTimer = setTimeout(() => {
+    unlockDueCards();
+    buildDayPanel();
+    loadDayCards(activeDayIndex);
+    scheduleNextUnlock();
+  }, msUntilNextUnlock());
 }
 
-// ===== TOAST =====
-function showToast(text) {
-  const toast = document.getElementById('audioToast');
-  document.getElementById('audioToastText').textContent = text;
-  toast.classList.add('visible');
+function updateCountdown() {
+  const el = document.getElementById('countdownTimer');
+  if (!el) return;
+  function tick() {
+    const ms = msUntilNextUnlock();
+    const s = Math.floor(ms / 1000);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    el.textContent = `Next unlock: ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  }
+  tick();
+  setInterval(tick, 1000);
 }
-function hideToast() {
-  document.getElementById('audioToast').classList.remove('visible');
-}
-function showToastMessage(text, duration) {
-  showToast(text);
-  setTimeout(hideToast, duration);
-}
+updateCountdown();
 
-// ===== PDF — ALL 5 CARDS OF CURRENT DAY =====
-async function downloadPdf() {
-  const cards = getDayCards(activeDayIndex);
-  if (!cards.length) return;
-
-  showToast(`Generating PDF (${cards.length} cards)…`);
+// ===== PDF EXPORT =====
+async function generateMultiPagePDF() {
+  const btn = document.getElementById('btnDownloadPdf');
+  btn.style.opacity = '0.5';
+  btn.style.pointerEvents = 'none';
+  btn.innerHTML = '<span>Creating PDF...</span>';
 
   try {
-    const { jsPDF } = window.jspdf;
-    const CARD_W_MM = 105; // A6 portrait
-    const CARD_H_MM = 148;
+    const pdf = new jspdf.jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    
+    // Create an off-screen container to render cards at high resolution
+    const exportDiv = document.createElement('div');
+    exportDiv.style.position = 'absolute';
+    exportDiv.style.left = '-9999px';
+    exportDiv.style.top = '0';
+    exportDiv.style.width = '500px'; 
+    exportDiv.style.height = '700px';
+    document.body.appendChild(exportDiv);
 
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: [CARD_W_MM, CARD_H_MM]
-    });
+    for (let i = 0; i < currentDayCards.length; i++) {
+      const card = currentDayCards[i];
+      const bgGradient = `linear-gradient(135deg, ${card.colorHint}55 0%, #05050f 100%)`;
+      
+      exportDiv.innerHTML = `
+        <div class="nihongo-card active" style="position:relative; width:100%; height:100%; transform:none; border-radius:0;">
+          <div class="card-bg" style="background: ${bgGradient};">
+            <div class="card-watermark" style="font-size: 20rem; opacity: 0.2;">${card.icon}</div>
+          </div>
+          <div class="card-overlay"></div>
+          <div class="card-content" style="padding:40px;">
+            <div class="card-top">
+              <div class="card-badge">CARD ${i + 1}</div>
+            </div>
+            <div class="card-middle">
+              <div class="card-theme">${card.theme}</div>
+              <div class="card-japanese" style="font-size:4rem;">${card.japanese}</div>
+              <div class="card-nepali" style="font-size:3rem;">${card.nepali}</div>
+              <div class="card-romaji" style="font-size:1.5rem;">(${card.romaji})</div>
+            </div>
+            <div class="card-bottom">
+              <div class="detail-row" style="background:rgba(255,255,255,0.1); padding:20px;">
+                <div class="detail-icon">🇬🇧</div>
+                <div class="detail-text" style="font-size:1.2rem;">Meaning: "${card.english}"</div>
+              </div>
+              <div class="detail-row" style="background:rgba(255,255,255,0.1); padding:20px;">
+                <div class="detail-icon">🌸</div>
+                <div class="detail-text" style="font-size:1.2rem;">Habit: ${card.habit}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
 
-    for (let i = 0; i < cards.length; i++) {
-      const card = cards[i];
-      const cardEl = document.getElementById(`card-${card.id}`);
-      if (!cardEl) continue;
-
-      showToast(`Rendering card ${i + 1} of ${cards.length}…`);
-
-      // Temporarily make fully visible for capture
-      const origClass = cardEl.className;
-      cardEl.className = 'nihongo-card active';
-      cardEl.style.position = 'relative';
-      cardEl.style.zIndex = '999';
-      await new Promise(r => setTimeout(r, 80)); // let paint settle
-
-      const canvas = await html2canvas(cardEl, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#0a0a1a',
-        logging: false,
-      });
-
-      // Restore
-      cardEl.className = origClass;
-      cardEl.style.position = '';
-      cardEl.style.zIndex = '';
-
-      const imgData = canvas.toDataURL('image/png');
-      const imgAspect = canvas.height / canvas.width;
-      const pdfImgH = CARD_W_MM * imgAspect;
-      const yOffset  = (CARD_H_MM - Math.min(pdfImgH, CARD_H_MM)) / 2;
-
-      if (i > 0) pdf.addPage([CARD_W_MM, CARD_H_MM], 'portrait');
-      pdf.addImage(imgData, 'PNG', 0, yOffset, CARD_W_MM, Math.min(pdfImgH, CARD_H_MM));
-
-      // Card label footer
-      pdf.setFontSize(7);
-      pdf.setTextColor(160, 160, 180);
-      pdf.text(`Card ${i + 1}/${cards.length} — ${card.japanese} (${card.romaji})`, CARD_W_MM / 2, CARD_H_MM - 2, { align: 'center' });
+      const canvas = await html2canvas(exportDiv, { scale: 2, useCORS: true, backgroundColor: '#05050f' });
+      const imgData = canvas.toDataURL('image/jpeg', 0.9);
+      
+      if (i > 0) pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
     }
-
-    const dayLabel = getDayDateLabel(activeDayIndex).replace(/\s+/g, '-');
-    pdf.save(`nihongo-day${activeDayIndex + 1}-${dayLabel}.pdf`);
-    showToastMessage(`✅ PDF saved! (${cards.length} cards)`, 3000);
-  } catch (err) {
-    console.error('PDF error:', err);
-    showToastMessage('PDF generation failed', 2000);
+    
+    document.body.removeChild(exportDiv);
+    pdf.save(`Nihongo_Cards_Day_${activeDayIndex + 1}.pdf`);
+  } catch (error) {
+    console.error('PDF Generation failed', error);
+    alert('Failed to generate PDF. Please try again.');
+  } finally {
+    btn.style.opacity = '1';
+    btn.style.pointerEvents = 'auto';
+    btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Get PDF</span>`;
   }
-}
-
-// ===== EVENT BINDINGS =====
-function bindEvents() {
-  document.getElementById('navPrev').addEventListener('click', () => navigate('prev'));
-  document.getElementById('navNext').addEventListener('click', () => navigate('next'));
-  document.getElementById('btnDownloadPdf').addEventListener('click', downloadPdf);
-
-  document.addEventListener('keydown', e => {
-    if (e.key === 'ArrowLeft')  navigate('prev');
-    if (e.key === 'ArrowRight') navigate('next');
-    if (e.key === ' ')          { e.preventDefault(); playAudio(currentIndex); }
-  });
-
-  let touchStartX = 0;
-  const stage = document.getElementById('cardStage');
-  stage.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
-  stage.addEventListener('touchend',   e => {
-    const diff = touchStartX - e.changedTouches[0].screenX;
-    if (Math.abs(diff) > 50) navigate(diff > 0 ? 'next' : 'prev');
-  }, { passive: true });
 }

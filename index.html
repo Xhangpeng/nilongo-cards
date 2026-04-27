@@ -3,66 +3,70 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>日本語カード — Nihongo Cards | Daily Japanese Greetings</title>
-  <meta name="description" content="5 new Japanese greeting cards unlock every day at 5:45 AM Nepal Time. Learn Japanese with Nepali meanings, audio pronunciation, and PDF export." />
+  <title>日本語カード — Nihongo Cards | Master Daily Japanese</title>
+  <meta name="description" content="5 new Japanese cards unlock every day at 5:45 AM Nepal Time. Learn with unique infographic visualizations and instant audio." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Noto+Sans:wght@400;600;700&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+JP:wght@400;700;900&family=Tiro+Devanagari+Hindi:ital@0;1&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Floating particles -->
-  <div class="particles" id="particles"></div>
-
-  <!-- ===== HEADER ===== -->
+  <!-- Header -->
   <header class="app-header" id="app-header">
     <div class="header-inner">
       <div class="logo">
         <span class="logo-jp">日本語</span>
-        <span class="logo-en">Nihongo Cards</span>
+        <span class="logo-en">Cards</span>
       </div>
       <div class="header-right">
         <div class="countdown-pill" id="countdownTimer">Next unlock: --:--:--</div>
         <button class="btn-pdf" id="btnDownloadPdf" title="Download today's 5 cards as PDF">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          <span>Download PDF</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Get PDF</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- ===== DAY SELECTOR PANEL ===== -->
-  <div class="day-selector-wrap" id="daySelectorWrap">
-    <div id="dayPanel"><!-- injected by JS --></div>
-    <div class="day-info-bar">
-      <span class="day-heading" id="dayHeading">Today's Cards</span>
-      <span class="day-date" id="dayDateLabel"></span>
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">Master <span class="accent">Japanese</span> Every Morning.</h1>
+      <p class="hero-subtitle">5 dynamic cards. 5:45 AM. Pure daily growth. Learn vocabulary with unique infographic visualizations and instant audio.</p>
+      <div class="hero-actions">
+        <a href="#practice-deck" class="btn-primary">Start Practice</a>
+        <div class="scroll-status">Scroll to explore</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Day Selector Panel -->
+  <div class="day-selector-container" id="practice-deck">
+    <div class="day-selector-wrap" id="daySelectorWrap">
+      <div id="dayPanel" class="day-panel-inner"><!-- injected by JS --></div>
+      <div class="day-info-bar">
+        <span class="day-heading" id="dayHeading">Today's Cards</span>
+        <span class="day-date" id="dayDateLabel"></span>
+      </div>
     </div>
   </div>
 
-  <!-- ===== MAIN STAGE ===== -->
+  <!-- Main Flashcard Stage -->
   <main class="card-stage" id="cardStage">
+    <!-- Particles specifically for the card stage background -->
+    <div class="particles" id="particles"></div>
+
     <button class="nav-arrow nav-prev" id="navPrev" aria-label="Previous card">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
     <button class="nav-arrow nav-next" id="navNext" aria-label="Next card">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
 
     <div class="card-container" id="cardContainer"><!-- cards injected by JS --></div>
 
     <div class="dot-indicators" id="dotIndicators"></div>
   </main>
-
-  <!-- ===== AUDIO TOAST ===== -->
-  <div class="audio-toast" id="audioToast">
-    <div class="toast-spinner"></div>
-    <span id="audioToastText">Loading…</span>
-  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
