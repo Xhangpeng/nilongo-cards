@@ -328,6 +328,8 @@ function playAudio(index) {
   
   // Use hiragana for correct and softer pronunciation
   const utterance = new SpeechSynthesisUtterance(card.hiragana);
+  utterance.lang = 'ja-JP'; // Force Japanese language engine to prevent fallback to English/OS default
+  
   const voices = window.speechSynthesis.getVoices();
   
   // Prefer premium softer female voices (Haruka, Kyoko, Google) before falling back to generic JP
