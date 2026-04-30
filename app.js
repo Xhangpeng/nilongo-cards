@@ -92,8 +92,7 @@ let currentDayCards = [];
 let activeCardIndex = 0;
 let activeDayIndex = 0;
 let schedulerTimer = null;
-let isAudioPrimed = false;
-let cachedJaVoice = null; // Cache to eliminate voice lookup lag
+let audioCache = {}; // Cache for instant MP3 playback
 
 // ===== TIME CALCULATION =====
 function getNepalTime() {
@@ -131,20 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
   loadDayCards(activeDayIndex);
   scheduleNextUnlock();
   bindEvents();
-  
-  // Prime audio instantly on first interaction
-  const primeHandler = () => {
-    if (!isAudioPrimed && window.speechSynthesis) {
-      const u = new SpeechSynthesisUtterance('');
-      u.volume = 0;
-      window.speechSynthesis.speak(u);
-      isAudioPrimed = true;
-      document.removeEventListener('click', primeHandler);
-      document.removeEventListener('touchstart', primeHandler);
-    }
-  };
-  document.addEventListener('click', primeHandler);
-  document.addEventListener('touchstart', primeHandler);
 });
 
 // ===== CORE LOGIC =====
@@ -177,9 +162,30 @@ function loadDayCards(dayIndex) {
   currentDayCards = MASTER_LIBRARY.slice(startIndex, startIndex + 5);
   activeCardIndex = 0;
   
+  preloadDayAudio(currentDayCards);
+  
   renderCards();
   updateView();
   updateDayHeading(dayIndex);
+}
+
+function preloadDayAudio(cards) {
+  // Clear old cache to save memory
+  for (let id in audioCache) {
+    if (audioCache[id]) {
+      audioCache[id].src = "";
+      audioCache[id].load();
+    }
+  }
+  audioCache = {};
+  
+  cards.forEach((card, i) => {
+    // Preload MP3 directly from TTS endpoint for instant zero-latency playback
+    const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=ja&client=tw-ob&q=${encodeURIComponent(card.hiragana)}`;
+    const audio = new Audio(url);
+    audio.preload = 'auto'; // Force browser to download immediately in background
+    audioCache[i] = audio;
+  });
 }
 
 function updateDayHeading(dayIndex) {
@@ -319,40 +325,38 @@ function bindEvents() {
 // ===== AUDIO =====
 function playAudio(index) {
   const card = currentDayCards[index];
-  if (!card || !window.speechSynthesis) return;
-  
-  // Only cancel if actively speaking to avoid flush lag
-  if (window.speechSynthesis.speaking) {
-    window.speechSynthesis.cancel();
-  }
+  if (!card) return;
   
   const btn = document.getElementById(`btnAudio-${index}`);
+  
+  // Stop any currently playing audio immediately
+  for (let i in audioCache) {
+    if (audioCache[i] && !audioCache[i].paused) {
+      audioCache[i].pause();
+      audioCache[i].currentTime = 0;
+    }
+  }
+  
   document.querySelectorAll('.btn-audio').forEach(b => b.classList.remove('playing'));
   if (btn) btn.classList.add('playing');
   
-  // Use hiragana for correct and softer pronunciation
-  const utterance = new SpeechSynthesisUtterance(card.hiragana);
-  utterance.lang = 'ja-JP'; // Force Japanese language engine to prevent fallback to English/OS default
-  
-  // Cache voice globally to eliminate search latency
-  if (!cachedJaVoice) {
-    const voices = window.speechSynthesis.getVoices();
-    cachedJaVoice = voices.find(v => v.name.includes('Haruka') || v.name.includes('Kyoko') || v.name.includes('Google 日本語')) 
-                 || voices.find(v => v.lang.startsWith('ja')) 
-                 || voices.find(v => v.lang.includes('JP'));
+  const audio = audioCache[index];
+  if (audio) {
+    audio.currentTime = 0; // Reset to start
+    audio.onended = () => { if (btn) btn.classList.remove('playing'); };
+    audio.onerror = () => { if (btn) btn.classList.remove('playing'); };
+    
+    // Play instantly
+    const playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(error => {
+        console.error("Audio play failed:", error);
+        if (btn) btn.classList.remove('playing');
+      });
+    }
+  } else {
+    if (btn) btn.classList.remove('playing');
   }
-               
-  if (cachedJaVoice) utterance.voice = cachedJaVoice;
-  
-  // Adjust pitch slightly higher and rate slightly slower for an elegant, softer tone
-  utterance.pitch = 1.2;
-  utterance.rate = 0.8;
-  
-  utterance.onend = () => { if (btn) btn.classList.remove('playing'); };
-  utterance.onerror = () => { if (btn) btn.classList.remove('playing'); };
-  
-  // Slight detachment to prevent main thread blocking
-  setTimeout(() => window.speechSynthesis.speak(utterance), 5);
 }
 
 // ===== SCHEDULER =====
