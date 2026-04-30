@@ -93,6 +93,7 @@ let activeCardIndex = 0;
 let activeDayIndex = 0;
 let schedulerTimer = null;
 let isAudioPrimed = false;
+let cachedJaVoice = null; // Cache to eliminate voice lookup lag
 
 // ===== TIME CALCULATION =====
 function getNepalTime() {
@@ -320,7 +321,10 @@ function playAudio(index) {
   const card = currentDayCards[index];
   if (!card || !window.speechSynthesis) return;
   
-  window.speechSynthesis.cancel();
+  // Only cancel if actively speaking to avoid flush lag
+  if (window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel();
+  }
   
   const btn = document.getElementById(`btnAudio-${index}`);
   document.querySelectorAll('.btn-audio').forEach(b => b.classList.remove('playing'));
@@ -330,14 +334,15 @@ function playAudio(index) {
   const utterance = new SpeechSynthesisUtterance(card.hiragana);
   utterance.lang = 'ja-JP'; // Force Japanese language engine to prevent fallback to English/OS default
   
-  const voices = window.speechSynthesis.getVoices();
-  
-  // Prefer premium softer female voices (Haruka, Kyoko, Google) before falling back to generic JP
-  const jaVoice = voices.find(v => v.name.includes('Haruka') || v.name.includes('Kyoko') || v.name.includes('Google 日本語')) 
-               || voices.find(v => v.lang.startsWith('ja')) 
-               || voices.find(v => v.lang.includes('JP'));
+  // Cache voice globally to eliminate search latency
+  if (!cachedJaVoice) {
+    const voices = window.speechSynthesis.getVoices();
+    cachedJaVoice = voices.find(v => v.name.includes('Haruka') || v.name.includes('Kyoko') || v.name.includes('Google 日本語')) 
+                 || voices.find(v => v.lang.startsWith('ja')) 
+                 || voices.find(v => v.lang.includes('JP'));
+  }
                
-  if (jaVoice) utterance.voice = jaVoice;
+  if (cachedJaVoice) utterance.voice = cachedJaVoice;
   
   // Adjust pitch slightly higher and rate slightly slower for an elegant, softer tone
   utterance.pitch = 1.2;
@@ -346,7 +351,8 @@ function playAudio(index) {
   utterance.onend = () => { if (btn) btn.classList.remove('playing'); };
   utterance.onerror = () => { if (btn) btn.classList.remove('playing'); };
   
-  window.speechSynthesis.speak(utterance);
+  // Slight detachment to prevent main thread blocking
+  setTimeout(() => window.speechSynthesis.speak(utterance), 5);
 }
 
 // ===== SCHEDULER =====
